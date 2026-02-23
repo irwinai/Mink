@@ -86,10 +86,15 @@ function loadConfig() {
   try {
     if (fs.existsSync(configPath)) return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   } catch { }
-  return { recentFiles: [], recentFolders: [], lastFolder: null, welcomeShown: false, lang: 'zh' };
+  return { recentFiles: [], recentFolders: [], lastFolder: null, lastFile: null, welcomeShown: false, lang: 'zh' };
 }
 function saveConfig(config) {
   try { fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8'); } catch { }
+}
+function setLastFile(filePath) {
+  const config = loadConfig();
+  config.lastFile = filePath || null;
+  saveConfig(config);
 }
 function addRecentFile(filePath) {
   const config = loadConfig();
@@ -134,18 +139,27 @@ function createWindow() {
   updateTitle();
   buildMenu();
 
-  // On page load: welcome doc (first time only) + restore last folder
+  // On page load: restore last file/folder, fallback to welcome doc.
   mainWindow.webContents.on('did-finish-load', () => {
-    // Avoid first-paint FOUC: show only after renderer has finished loading.
-    if (!mainWindow.isVisible()) {
-      mainWindow.maximize();
-      mainWindow.show();
+    const config = loadConfig();
+    let restoredLastFile = false;
+
+    // Restore last opened file first.
+    if (!currentFilePath && config.lastFile && fs.existsSync(config.lastFile)) {
+      try {
+        const content = fs.readFileSync(config.lastFile, 'utf-8');
+        currentFilePath = config.lastFile;
+        isModified = false;
+        isWelcomeDoc = false;
+        addRecentFile(config.lastFile);
+        mainWindow.webContents.send('file-opened', { content, path: config.lastFile });
+        updateTitle();
+        restoredLastFile = true;
+      } catch { }
     }
 
-    const config = loadConfig();
-
-    // Show welcome doc only on very first launch
-    if (!currentFilePath && !config.welcomeShown) {
+    // Show welcome doc only on very first launch if no file was restored.
+    if (!restoredLastFile && !currentFilePath && !config.welcomeShown) {
       try {
         const welcomePath = path.join(__dirname, '../src/welcome.md');
         let content;
@@ -172,6 +186,12 @@ function createWindow() {
       const tree = readFolderTree(config.lastFolder);
       mainWindow.webContents.send('folder-opened', { path: config.lastFolder, tree });
     }
+
+    // Avoid first-paint FOUC: show only after initial restore work is done.
+    if (!mainWindow.isVisible()) {
+      mainWindow.maximize();
+      mainWindow.show();
+    }
   });
 }
 
@@ -196,6 +216,7 @@ async function newFile() {
     if (result.response === 2) return;
   }
   currentFilePath = null;
+  setLastFile(null);
   isModified = false;
   isWelcomeDoc = false;
   mainWindow.webContents.send('file-new');
@@ -230,6 +251,7 @@ async function openFile(filePath) {
   try {
     const content = fs.readFileSync(targetPath, 'utf-8');
     currentFilePath = targetPath;
+    setLastFile(targetPath);
     isModified = false;
     isWelcomeDoc = false;
     addRecentFile(targetPath);
@@ -265,6 +287,7 @@ async function saveFileAs() {
   if (result.canceled) return;
 
   currentFilePath = result.filePath;
+  setLastFile(currentFilePath);
   await saveFile();
 }
 
@@ -376,6 +399,7 @@ ipcMain.handle('delete-file', async (_, filePath) => {
       mainWindow.webContents.send('folder-opened', { path: currentFolderPath, tree });
     }
     if (currentFilePath === filePath) {
+      setLastFile(null);
       await newFile();
     }
     return { success: true };
@@ -392,6 +416,7 @@ ipcMain.handle('rename-file', async (_, oldPath, newName) => {
     fs.renameSync(oldPath, newPath);
     if (currentFilePath === oldPath) {
       currentFilePath = newPath;
+      setLastFile(newPath);
       updateTitle();
     }
     if (currentFolderPath) {
