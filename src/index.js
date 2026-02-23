@@ -17,7 +17,18 @@ async function callAI(opts) {
 }
 
 async function _callOpenAI({ apiKey, model, baseUrl, messages, stream, onChunk }) {
-  const url = new URL(baseUrl || 'https://api.openai.com/v1/chat/completions');
+  // Normalize baseUrl: accept base like http://host/v1 or full endpoint
+  let endpoint = baseUrl || 'https://api.openai.com/v1/chat/completions';
+  if (endpoint && !endpoint.endsWith('/chat/completions')) {
+    // Fix common mistake: /v1/completions → /v1/chat/completions
+    if (endpoint.endsWith('/completions')) {
+      endpoint = endpoint.replace(/\/completions$/, '/chat/completions');
+    } else {
+      // Assume it's a base like http://host/v1
+      endpoint = endpoint.replace(/\/$/, '') + '/chat/completions';
+    }
+  }
+  const url = new URL(endpoint);
   const body = JSON.stringify({ model: model || 'gpt-4o-mini', messages, stream });
   const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
   if (stream) {
