@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mink — 优雅的 Markdown 编辑器</title>
+    <meta name="description" content="Mink 是一款轻量、优雅的所见即所得 Markdown 桌面编辑器，专为写作者设计。">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Nav -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="#" class="nav-logo">
+                <img src="icon.png" alt="Mink" width="32" height="32">
+                <span>Mink</span>
+            </a>
+            <div class="nav-links">
+                <a href="#features">功能</a>
+                <a href="#preview">预览</a>
+                <a href="https://github.com/irwinai/Mink" target="_blank">GitHub</a>
+                <a href="https://github.com/irwinai/Mink/releases" class="btn-nav" target="_blank">下载</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-content">
+            <div class="hero-badge">✨ 开源 · 免费 · macOS</div>
+            <h1>优雅地书写<br><span class="gradient-text">Markdown</span></h1>
+            <p class="hero-subtitle">
+                Mink 是一款轻量的所见即所得 Markdown 桌面编辑器。<br>
+                输入即渲染，无需切换模式，专注于你的文字。
+            </p>
+            <div class="hero-actions">
+                <a href="https://github.com/irwinai/Mink/releases" class="btn-primary" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    下载 Mink
+                </a>
+                <a href="https://github.com/irwinai/Mink" class="btn-secondary" target="_blank">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                    </svg>
+                    查看源码
+                </a>
+            </div>
+            <div class="hero-icon-wrap">
+                <img src="icon.png" alt="Mink Icon" class="hero-icon">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">为什么选择 Mink？</h2>
+            <p class="section-subtitle">简约而不简单，专注于书写体验</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">✍️</div>
+                    <h3>所见即所得</h3>
+                    <p>输入 Markdown 语法即时渲染，像 Typora 一样流畅。无需切换预览模式。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3>深色 / 浅色主题</h3>
+                    <p>优雅的双主题设计，保护你的眼睛，无论白天还是深夜写作。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📂</div>
+                    <h3>文件夹管理</h3>
+                    <p>侧边栏文件树，轻松浏览和管理你的 Markdown 文件。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>查找与替换</h3>
+                    <p>强大的搜索功能，高亮匹配结果，一键替换。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💻</div>
+                    <h3>源代码模式</h3>
+                    <p>Cmd+/ 随时切换源代码视图，直接编辑原始 Markdown。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>极速启动</h3>
+                    <p>基于 Electron + TipTap 构建，启动迅速，响应流畅。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Preview Section -->
+    <section class="preview" id="preview">
+        <div class="container">
+            <h2 class="section-title">优雅的编辑体验</h2>
+            <p class="section-subtitle">简洁的界面，专注于内容创作</p>
+            <div class="preview-window">
+                <div class="window-bar">
+                    <span class="dot dot-red"></span>
+                    <span class="dot dot-yellow"></span>
+                    <span class="dot dot-green"></span>
+                    <span class="window-title">Mink — 未命名.md</span>
+                </div>
+                <div class="window-body">
+                    <div class="mock-sidebar">
+                        <div class="mock-sidebar-item active">📄 README.md</div>
+                        <div class="mock-sidebar-item">📄 笔记.md</div>
+                        <div class="mock-sidebar-item">📁 日记</div>
+                    </div>
+                    <div class="mock-editor">
+                        <h1 class="mock-h1">Mink Editor</h1>
+                        <p class="mock-p">一款 <strong>优雅</strong> 的 Markdown 编辑器，专为创作者设计。</p>
+                        <h2 class="mock-h2">✨ 功能特性</h2>
+                        <ul class="mock-ul">
+                            <li>所见即所得编辑</li>
+                            <li>深色 / 浅色主题</li>
+                            <li>侧边栏文件管理</li>
+                            <li>源代码模式切换</li>
+                        </ul>
+                        <h2 class="mock-h2">🚀 快速开始</h2>
+                        <div class="mock-code">npm install && npm start</div>
+                        <blockquote class="mock-quote">写作是灵魂的呼吸。</blockquote>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Shortcuts -->
+    <section class="shortcuts">
+        <div class="container">
+            <h2 class="section-title">快捷键</h2>
+            <p class="section-subtitle">用键盘掌控一切</p>
+            <div class="shortcuts-grid">
+                <div class="shortcut"><kbd>⌘</kbd><kbd>N</kbd><span>新建文件</span></div>
+                <div class="shortcut"><kbd>⌘</kbd><kbd>O</kbd><span>打开文件</span></div>
+                <div class="shortcut"><kbd>⌘</kbd><kbd>S</kbd><span>保存</span></div>
+                <div class="shortcut"><kbd>⌘</kbd><kbd>B</kbd><span>加粗</span></div>
+                <div class="shortcut"><kbd>⌘</kbd><kbd>I</kbd><span>斜体</span></div>
+                <div class="shortcut"><kbd>⌘</kbd><kbd>/</kbd><span>源代码模式</span></div>
+                <div class="shortcut"><kbd>⌘</kbd><kbd>F</kbd><span>查找替换</span></div>
+                <div class="shortcut"><kbd>⌘</kbd><kbd>\</kbd><span>侧边栏</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-card">
+                <h2>准备好开始了吗？</h2>
+                <p>Mink 完全免费且开源。立即下载，开始你的写作之旅。</p>
+                <div class="hero-actions">
+                    <a href="https://github.com/irwinai/Mink/releases" class="btn-primary" target="_blank">
+                        下载 Mink v1.0.0
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="icon.png" alt="Mink" width="24" height="24">
+                    <span>Mink</span>
+                </div>
+                <p class="footer-copy">© 2024 irwinai · MIT License</p>
+                <div class="footer-links">
+                    <a href="https://github.com/irwinai/Mink" target="_blank">GitHub</a>
+                    <a href="https://github.com/irwinai/Mink/releases" target="_blank">Releases</a>
+                    <a href="https://github.com/irwinai/Mink/issues" target="_blank">Issues</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Nav background on scroll
+        const nav = document.querySelector('.nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 40);
+        });
+
+        // Animate feature cards on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.feature-card, .shortcut, .preview-window, .cta-card').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+
+</html>
