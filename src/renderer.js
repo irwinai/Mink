@@ -1296,8 +1296,10 @@ if (api) {
 } // end if (api)
 
 // ===== Language Change Handler =====
+let _currentUILang = 'zh'; // Track current UI language for AI features
 if (api && api.onLanguageChanged) {
     api.onLanguageChanged((lang) => {
+        _currentUILang = lang;
         // Update sidebar tab labels
         const filesTab = document.querySelector('[data-tab="files"]');
         const outlineTab = document.querySelector('[data-tab="outline"]');
@@ -1592,7 +1594,7 @@ const aiI18n = {
     },
 };
 function aiT(key) {
-    const lang = typeof currentUILang !== 'undefined' ? currentUILang : 'en';
+    const lang = typeof _currentUILang !== 'undefined' ? _currentUILang : 'zh';
     return aiI18n[lang]?.[key] || aiI18n.en[key] || key;
 }
 
