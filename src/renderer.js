@@ -1714,6 +1714,7 @@ function createAISettingsModal() {
 // ===== 2. Inline AI Toolbar =====
 let _aiToolbar = null;
 let _aiResultContainer = null;
+let _savedAISelection = null; // {text, from, to}
 
 function showAIToolbar() {
     if (isSourceMode || !editor) return;
@@ -1721,6 +1722,11 @@ function showAIToolbar() {
     if (from === to) return; // No selection
 
     hideAIToolbar();
+
+    // Save the selection NOW before any button click can clear it
+    const selectedText = editor.state.doc.textBetween(from, to, '\n');
+    if (!selectedText) return;
+    _savedAISelection = { text: selectedText, from, to };
 
     const coords = editor.view.coordsAtPos(to);
     const editorWrap = document.getElementById('editor-wrap');
@@ -1741,8 +1747,9 @@ function showAIToolbar() {
     _aiToolbar.style.left = (coords.left - wrapRect.left) + 'px';
     editorWrap.appendChild(_aiToolbar);
 
+    // Use mousedown + preventDefault to prevent stealing focus from editor
     _aiToolbar.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('mousedown', (e) => {
             e.preventDefault();
             e.stopPropagation();
             handleAIAction(btn.dataset.action);
@@ -1756,12 +1763,8 @@ function hideAIToolbar() {
 }
 
 async function handleAIAction(action) {
-    if (!editor) return;
-    const selectedText = editor.state.doc.textBetween(
-        editor.state.selection.from,
-        editor.state.selection.to,
-        '\n'
-    );
+    if (!editor || !_savedAISelection) return;
+    const { text: selectedText, from, to } = _savedAISelection;
     if (!selectedText) return;
 
     // Check config
@@ -1798,7 +1801,7 @@ async function handleAIAction(action) {
     _aiToolbar = null;
 
     const editorWrap = document.getElementById('editor-wrap');
-    const coords = editor.view.coordsAtPos(editor.state.selection.to);
+    const coords = editor.view.coordsAtPos(to);
     const wrapRect = editorWrap.getBoundingClientRect();
 
     _aiResultContainer = document.createElement('div');
@@ -1848,7 +1851,6 @@ async function handleAIAction(action) {
     // Apply button
     _aiResultContainer.querySelector('.ai-apply-btn').addEventListener('click', () => {
         if (resultText && editor) {
-            const { from, to } = editor.state.selection;
             if (action === 'continue') {
                 editor.chain().focus().insertContentAt(to, resultText).run();
             } else {
