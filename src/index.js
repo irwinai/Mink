@@ -2,7 +2,97 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, nativeImage, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
-const { callAI } = require('./ai-service');
+const https = require('https');
+const http = require('http');
+
+// ===== Inlined AI Service =====
+async function callAI(opts) {
+  const { provider, apiKey, model, baseUrl, messages, stream = false, onChunk } = opts;
+  switch (provider) {
+    case 'openai': return _callOpenAI({ apiKey, model, baseUrl, messages, stream, onChunk });
+    case 'claude': return _callClaude({ apiKey, model, baseUrl, messages, stream, onChunk });
+    case 'ollama': return _callOllama({ model, baseUrl, messages, stream, onChunk });
+    default: throw new Error(`Unknown AI provider: ${provider}`);
+  }
+}
+
+async function _callOpenAI({ apiKey, model, baseUrl, messages, stream, onChunk }) {
+  const url = new URL(baseUrl || 'https://api.openai.com/v1/chat/completions');
+  const body = JSON.stringify({ model: model || 'gpt-4o-mini', messages, stream });
+  const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` };
+  if (stream) {
+    return _streamReq(url, headers, body, (line) => {
+      if (line === 'data: [DONE]') return null;
+      if (!line.startsWith('data: ')) return '';
+      try { return JSON.parse(line.slice(6)).choices?.[0]?.delta?.content || ''; } catch { return ''; }
+    }, onChunk);
+  }
+  const data = await _jsonReq(url, headers, body);
+  return data.choices?.[0]?.message?.content || '';
+}
+
+async function _callClaude({ apiKey, model, baseUrl, messages, stream, onChunk }) {
+  const url = new URL(baseUrl || 'https://api.anthropic.com/v1/messages');
+  let system = '';
+  const filtered = [];
+  for (const msg of messages) { if (msg.role === 'system') system += (system ? '\n' : '') + msg.content; else filtered.push(msg); }
+  const bodyObj = { model: model || 'claude-3-5-sonnet-20241022', max_tokens: 4096, messages: filtered, stream };
+  if (system) bodyObj.system = system;
+  const headers = { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
+  if (stream) {
+    return _streamReq(url, headers, JSON.stringify(bodyObj), (line) => {
+      if (!line.startsWith('data: ')) return '';
+      try { const j = JSON.parse(line.slice(6)); return j.type === 'content_block_delta' ? (j.delta?.text || '') : ''; } catch { return ''; }
+    }, onChunk);
+  }
+  const data = await _jsonReq(url, headers, JSON.stringify(bodyObj));
+  return data.content?.[0]?.text || '';
+}
+
+async function _callOllama({ model, baseUrl, messages, stream, onChunk }) {
+  const url = new URL(baseUrl || 'http://localhost:11434/api/chat');
+  const body = JSON.stringify({ model: model || 'llama3', messages, stream });
+  const headers = { 'Content-Type': 'application/json' };
+  if (stream) {
+    return _streamReq(url, headers, body, (line) => {
+      try { return JSON.parse(line).message?.content || ''; } catch { return ''; }
+    }, onChunk);
+  }
+  const data = await _jsonReq(url, headers, body);
+  return data.message?.content || '';
+}
+
+function _jsonReq(url, headers, body) {
+  return new Promise((resolve, reject) => {
+    const lib = url.protocol === 'https:' ? https : http;
+    const req = lib.request(url, { method: 'POST', headers }, (res) => {
+      let d = ''; res.on('data', c => d += c);
+      res.on('end', () => { try { resolve(JSON.parse(d)); } catch { reject(new Error(`Invalid JSON: ${d.slice(0, 200)}`)); } });
+    });
+    req.on('error', reject);
+    req.setTimeout(60000, () => { req.destroy(); reject(new Error('Timeout')); });
+    req.write(body); req.end();
+  });
+}
+
+function _streamReq(url, headers, body, parseLine, onChunk) {
+  return new Promise((resolve, reject) => {
+    const lib = url.protocol === 'https:' ? https : http;
+    let full = '', buf = '';
+    const req = lib.request(url, { method: 'POST', headers }, (res) => {
+      if (res.statusCode >= 400) { let e = ''; res.on('data', c => e += c); res.on('end', () => reject(new Error(`API ${res.statusCode}: ${e.slice(0, 300)}`))); return; }
+      res.on('data', (chunk) => {
+        buf += chunk.toString();
+        const lines = buf.split('\n'); buf = lines.pop();
+        for (const l of lines) { const t = l.trim(); if (!t) continue; const txt = parseLine(t); if (txt === null) continue; if (txt) { full += txt; if (onChunk) onChunk(txt); } }
+      });
+      res.on('end', () => { if (buf.trim()) { const txt = parseLine(buf.trim()); if (txt && txt !== null) { full += txt; if (onChunk) onChunk(txt); } } resolve(full); });
+    });
+    req.on('error', reject);
+    req.setTimeout(120000, () => { req.destroy(); reject(new Error('Stream timeout')); });
+    req.write(body); req.end();
+  });
+}
 
 // ===== Inline i18n =====
 const i18nLocales = {
