@@ -25,6 +25,7 @@
                 <span>Mink</span>
             </a>
             <div class="nav-links">
+                <a href="#ai" data-i18n="nav_ai">AI</a>
                 <a href="#features" data-i18n="nav_features">Features</a>
                 <a href="#preview" data-i18n="nav_preview">Preview</a>
                 <a href="https://github.com/irwinai/Mink" target="_blank">GitHub</a>
@@ -64,6 +65,36 @@
             </div>
             <div class="hero-icon-wrap">
                 <img src="icon.png" alt="Mink Icon" class="hero-icon">
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Showcase -->
+    <section class="ai-showcase" id="ai">
+        <div class="container">
+            <div class="ai-badge">🤖 AI-Powered</div>
+            <h2 class="section-title ai-glow-title" data-i18n="ai_title">Built-in AI Assistant</h2>
+            <p class="section-subtitle" data-i18n="ai_subtitle">Write smarter with AI — rewrite, translate, summarize,
+                and chat, all inside the editor</p>
+            <div class="ai-cards">
+                <div class="ai-card">
+                    <div class="ai-card-icon">✍️</div>
+                    <h3 data-i18n="ai_card1_title">Inline AI Toolbar</h3>
+                    <p data-i18n="ai_card1_desc">Select any text and instantly continue writing, rewrite, translate, or
+                        summarize with one click.</p>
+                </div>
+                <div class="ai-card">
+                    <div class="ai-card-icon">💬</div>
+                    <h3 data-i18n="ai_card2_title">AI Chat Sidebar</h3>
+                    <p data-i18n="ai_card2_desc">Context-aware AI chat that understands your document. Ask questions,
+                        brainstorm, and get writing help.</p>
+                </div>
+                <div class="ai-card">
+                    <div class="ai-card-icon">⚡</div>
+                    <h3 data-i18n="ai_card3_title">Smart Autocomplete</h3>
+                    <p data-i18n="ai_card3_desc">AI predicts your next sentence as you type. Press Tab to accept.
+                        Supports OpenAI, Claude, and Ollama.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -210,11 +241,15 @@
         // ===== i18n =====
         const i18n = {
             en: {
-                nav_features: 'Features', nav_preview: 'Preview', nav_download: 'Download',
+                nav_ai: 'AI', nav_features: 'Features', nav_preview: 'Preview', nav_download: 'Download',
                 hero_badge: '✨ Open Source · Free · macOS',
                 hero_title: 'Write <span class="gradient-text">Markdown</span><br>Elegantly',
                 hero_subtitle: 'Mink is a lightweight WYSIWYG Markdown desktop editor.<br>Type and render instantly. No mode switching. Focus on your words.',
                 hero_download: 'Download Mink', hero_source: 'View Source',
+                ai_title: 'Built-in AI Assistant', ai_subtitle: 'Write smarter with AI — rewrite, translate, summarize, and chat, all inside the editor',
+                ai_card1_title: 'Inline AI Toolbar', ai_card1_desc: 'Select any text and instantly continue writing, rewrite, translate, or summarize with one click.',
+                ai_card2_title: 'AI Chat Sidebar', ai_card2_desc: 'Context-aware AI chat that understands your document. Ask questions, brainstorm, and get writing help.',
+                ai_card3_title: 'Smart Autocomplete', ai_card3_desc: 'AI predicts your next sentence as you type. Press Tab to accept. Supports OpenAI, Claude, and Ollama.',
                 features_title: 'Why Mink?', features_subtitle: 'Simple yet powerful, focused on the writing experience',
                 f1_title: 'WYSIWYG', f1_desc: 'Type Markdown and see it rendered instantly, just like Typora. No need to switch between preview modes.',
                 f2_title: 'Dark / Light Theme', f2_desc: 'Elegant dual-theme design to protect your eyes, whether writing during the day or at night.',
@@ -230,11 +265,15 @@
                 cta_btn: 'Download Mink v1.0.0',
             },
             zh: {
-                nav_features: '功能', nav_preview: '预览', nav_download: '下载',
+                nav_ai: 'AI', nav_features: '功能', nav_preview: '预览', nav_download: '下载',
                 hero_badge: '✨ 开源 · 免费 · macOS',
                 hero_title: '优雅地书写<br><span class="gradient-text">Markdown</span>',
                 hero_subtitle: 'Mink 是一款轻量的所见即所得 Markdown 桌面编辑器。<br>输入即渲染，无需切换模式，专注于你的文字。',
                 hero_download: '下载 Mink', hero_source: '查看源码',
+                ai_title: '内置 AI 写作助手', ai_subtitle: '用 AI 更智能地写作 — 改写、翻译、总结、对话，全部在编辑器内完成',
+                ai_card1_title: '内联 AI 工具栏', ai_card1_desc: '选中任意文字，一键续写、改写、翻译或总结。',
+                ai_card2_title: 'AI 聊天侧边栏', ai_card2_desc: '上下文感知的 AI 对话，理解你的文档。提问、头脑风暴、获取写作帮助。',
+                ai_card3_title: '智能补全', ai_card3_desc: 'AI 在你打字时预测下一句。按 Tab 接受。支持 OpenAI、Claude、Ollama。',
                 features_title: '为什么选择 Mink？', features_subtitle: '简约而不简单，专注于书写体验',
                 f1_title: '所见即所得', f1_desc: '输入 Markdown 语法即时渲染，像 Typora 一样流畅。无需切换预览模式。',
                 f2_title: '深色 / 浅色主题', f2_desc: '优雅的双主题设计，保护你的眼睛，无论白天还是深夜写作。',
@@ -295,7 +334,7 @@
             });
         }, { threshold: 0.1 });
 
-        document.querySelectorAll('.feature-card, .shortcut, .preview-window, .cta-card').forEach(el => {
+        document.querySelectorAll('.feature-card, .shortcut, .preview-window, .cta-card, .ai-card').forEach(el => {
             observer.observe(el);
         });
     </script>

@@ -890,3 +890,41 @@ body {
     white-space: pre-wrap;
     z-index: 10;
 }
+
+/* ===== AI: Floating Chat Button ===== */
+.ai-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #07C160;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    z-index: 499;
+    box-shadow: 0 4px 16px rgba(7, 193, 96, 0.4);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: ai-fab-pulse 2s ease-in-out infinite;
+}
+
+.ai-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 24px rgba(7, 193, 96, 0.5);
+}
+
+@keyframes ai-fab-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 4px 16px rgba(7, 193, 96, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 4px 24px rgba(7, 193, 96, 0.6);
+    }
+}

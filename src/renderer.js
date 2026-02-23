@@ -2104,3 +2104,16 @@ if (editor) {
 // ===== Create chat panel on load =====
 createChatPanel();
 
+// ===== Floating AI Chat Button =====
+const _aiFab = document.createElement('button');
+_aiFab.id = 'ai-fab';
+_aiFab.className = 'ai-fab';
+_aiFab.innerHTML = '💬';
+_aiFab.title = 'AI Chat (⌘⇧L)';
+_aiFab.addEventListener('click', () => toggleChat());
+document.body.appendChild(_aiFab);
+
+// Update FAB icon when chat opens/closes
+const _origToggleChat = toggleChat;
+// Override toggleChat to also update FAB
+const _realToggle = toggleChat;
