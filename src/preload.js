@@ -24,4 +24,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     createFileInFolder: () => ipcRenderer.invoke('create-file-in-folder'),
     deleteFile: (filePath) => ipcRenderer.invoke('delete-file', filePath),
     renameFile: (oldPath, newName) => ipcRenderer.invoke('rename-file', oldPath, newName),
+
+    // AI
+    aiChat: (opts) => ipcRenderer.invoke('ai-chat', opts),
+    aiStreamStart: (opts) => ipcRenderer.invoke('ai-stream-start', opts),
+    aiStreamStop: () => ipcRenderer.send('ai-stream-stop'),
+    onAIStreamChunk: (callback) => ipcRenderer.on('ai-stream-chunk', (_, text) => callback(text)),
+    onAIStreamDone: (callback) => ipcRenderer.on('ai-stream-done', (_, text) => callback(text)),
+    onAIStreamError: (callback) => ipcRenderer.on('ai-stream-error', (_, err) => callback(err)),
+    getAIConfig: () => ipcRenderer.invoke('get-ai-config'),
+    setAIConfig: (config) => ipcRenderer.invoke('set-ai-config', config),
 });

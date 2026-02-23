@@ -1563,3 +1563,542 @@ initSidebar();
 document.getElementById('editor-wrap').addEventListener('scroll', () => {
     requestAnimationFrame(updateEditorCursor);
 });
+
+// =====================================================
+// ===== AI Features =====
+// =====================================================
+
+// ===== AI i18n =====
+const aiI18n = {
+    en: {
+        ai_settings: 'AI Settings', provider: 'Provider', api_key: 'API Key', model: 'Model',
+        base_url: 'Base URL (optional)', test_conn: 'Test Connection', save: 'Save', cancel: 'Cancel',
+        testing: 'Testing...', connected: '✓ Connected!', conn_failed: '✗ Failed: ',
+        ai_continue: 'Continue writing', ai_rewrite: 'Rewrite', ai_translate: 'Translate',
+        ai_summarize: 'Summarize', ai_custom: 'Custom prompt...', ai_apply: 'Apply', ai_discard: 'Discard',
+        ai_chat: 'AI Chat', ai_chat_placeholder: 'Ask AI anything...', ai_chat_send: 'Send',
+        ai_no_config: 'Please configure AI in Help → AI Settings first.',
+        ai_custom_prompt: 'Enter your prompt:',
+    },
+    zh: {
+        ai_settings: 'AI 设置', provider: '提供商', api_key: 'API 密钥', model: '模型',
+        base_url: '自定义 URL（可选）', test_conn: '测试连接', save: '保存', cancel: '取消',
+        testing: '测试中...', connected: '✓ 连接成功！', conn_failed: '✗ 失败：',
+        ai_continue: '续写', ai_rewrite: '改写', ai_translate: '翻译',
+        ai_summarize: '总结', ai_custom: '自定义指令...', ai_apply: '应用', ai_discard: '放弃',
+        ai_chat: 'AI 对话', ai_chat_placeholder: '问 AI 任何问题...', ai_chat_send: '发送',
+        ai_no_config: '请先在 帮助 → AI 设置 中配置 API 密钥。',
+        ai_custom_prompt: '请输入指令：',
+    },
+};
+function aiT(key) {
+    const lang = typeof currentUILang !== 'undefined' ? currentUILang : 'en';
+    return aiI18n[lang]?.[key] || aiI18n.en[key] || key;
+}
+
+// ===== 1. AI Settings Modal =====
+function createAISettingsModal() {
+    let existing = document.getElementById('ai-settings-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'ai-settings-modal';
+    modal.className = 'ai-modal-overlay';
+    modal.innerHTML = `
+        <div class="ai-modal">
+            <h2>${aiT('ai_settings')}</h2>
+            <div class="ai-form-group">
+                <label>${aiT('provider')}</label>
+                <select id="ai-provider">
+                    <option value="openai">OpenAI</option>
+                    <option value="claude">Claude (Anthropic)</option>
+                    <option value="ollama">Ollama (Local)</option>
+                </select>
+            </div>
+            <div class="ai-form-group">
+                <label>${aiT('api_key')}</label>
+                <input type="password" id="ai-api-key" placeholder="sk-..." autocomplete="off">
+            </div>
+            <div class="ai-form-group">
+                <label>${aiT('model')}</label>
+                <input type="text" id="ai-model" placeholder="gpt-4o-mini">
+            </div>
+            <div class="ai-form-group">
+                <label>${aiT('base_url')}</label>
+                <input type="text" id="ai-base-url" placeholder="https://api.openai.com/v1/chat/completions">
+            </div>
+            <div class="ai-form-actions">
+                <button id="ai-test-btn" class="ai-btn ai-btn-outline">${aiT('test_conn')}</button>
+                <span id="ai-test-result"></span>
+                <div style="flex:1"></div>
+                <button id="ai-cancel-btn" class="ai-btn ai-btn-outline">${aiT('cancel')}</button>
+                <button id="ai-save-btn" class="ai-btn ai-btn-primary">${aiT('save')}</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Load existing config
+    window.electronAPI.getAIConfig().then(config => {
+        document.getElementById('ai-provider').value = config.provider || 'openai';
+        document.getElementById('ai-api-key').value = config.apiKey || '';
+        document.getElementById('ai-model').value = config.model || '';
+        document.getElementById('ai-base-url').value = config.baseUrl || '';
+    });
+
+    // Provider change → update placeholder
+    document.getElementById('ai-provider').addEventListener('change', (e) => {
+        const modelInput = document.getElementById('ai-model');
+        const urlInput = document.getElementById('ai-base-url');
+        const keyInput = document.getElementById('ai-api-key');
+        if (e.target.value === 'openai') {
+            modelInput.placeholder = 'gpt-4o-mini';
+            urlInput.placeholder = 'https://api.openai.com/v1/chat/completions';
+            keyInput.style.display = '';
+        } else if (e.target.value === 'claude') {
+            modelInput.placeholder = 'claude-3-5-sonnet-20241022';
+            urlInput.placeholder = 'https://api.anthropic.com/v1/messages';
+            keyInput.style.display = '';
+        } else {
+            modelInput.placeholder = 'llama3';
+            urlInput.placeholder = 'http://localhost:11434/api/chat';
+            keyInput.style.display = 'none';
+        }
+    });
+
+    // Test connection
+    document.getElementById('ai-test-btn').addEventListener('click', async () => {
+        const resultEl = document.getElementById('ai-test-result');
+        resultEl.textContent = aiT('testing');
+        resultEl.className = '';
+        try {
+            const res = await window.electronAPI.aiChat({
+                provider: document.getElementById('ai-provider').value,
+                apiKey: document.getElementById('ai-api-key').value,
+                model: document.getElementById('ai-model').value,
+                baseUrl: document.getElementById('ai-base-url').value,
+                messages: [{ role: 'user', content: 'Say "OK" and nothing else.' }],
+            });
+            if (res.error) throw new Error(res.error);
+            resultEl.textContent = aiT('connected');
+            resultEl.className = 'ai-test-ok';
+        } catch (e) {
+            resultEl.textContent = aiT('conn_failed') + e.message;
+            resultEl.className = 'ai-test-fail';
+        }
+    });
+
+    // Save
+    document.getElementById('ai-save-btn').addEventListener('click', async () => {
+        await window.electronAPI.setAIConfig({
+            provider: document.getElementById('ai-provider').value,
+            apiKey: document.getElementById('ai-api-key').value,
+            model: document.getElementById('ai-model').value,
+            baseUrl: document.getElementById('ai-base-url').value,
+        });
+        modal.remove();
+    });
+
+    // Cancel
+    document.getElementById('ai-cancel-btn').addEventListener('click', () => modal.remove());
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
+// ===== 2. Inline AI Toolbar =====
+let _aiToolbar = null;
+let _aiResultContainer = null;
+
+function showAIToolbar() {
+    if (isSourceMode || !editor) return;
+    const { from, to } = editor.state.selection;
+    if (from === to) return; // No selection
+
+    hideAIToolbar();
+
+    const coords = editor.view.coordsAtPos(to);
+    const editorWrap = document.getElementById('editor-wrap');
+    const wrapRect = editorWrap.getBoundingClientRect();
+
+    _aiToolbar = document.createElement('div');
+    _aiToolbar.className = 'ai-toolbar';
+    _aiToolbar.innerHTML = `
+        <button data-action="continue">${aiT('ai_continue')}</button>
+        <button data-action="rewrite">${aiT('ai_rewrite')}</button>
+        <button data-action="translate">${aiT('ai_translate')}</button>
+        <button data-action="summarize">${aiT('ai_summarize')}</button>
+        <button data-action="custom">${aiT('ai_custom')}</button>
+    `;
+
+    // Position below selection
+    _aiToolbar.style.top = (coords.bottom - wrapRect.top + editorWrap.scrollTop + 8) + 'px';
+    _aiToolbar.style.left = (coords.left - wrapRect.left) + 'px';
+    editorWrap.appendChild(_aiToolbar);
+
+    _aiToolbar.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleAIAction(btn.dataset.action);
+        });
+    });
+}
+
+function hideAIToolbar() {
+    if (_aiToolbar) { _aiToolbar.remove(); _aiToolbar = null; }
+    if (_aiResultContainer) { _aiResultContainer.remove(); _aiResultContainer = null; }
+}
+
+async function handleAIAction(action) {
+    if (!editor) return;
+    const selectedText = editor.state.doc.textBetween(
+        editor.state.selection.from,
+        editor.state.selection.to,
+        '\n'
+    );
+    if (!selectedText) return;
+
+    // Check config
+    const config = await window.electronAPI.getAIConfig();
+    if (!config.apiKey && config.provider !== 'ollama') {
+        alert(aiT('ai_no_config'));
+        return;
+    }
+
+    let systemPrompt = '';
+    switch (action) {
+        case 'continue':
+            systemPrompt = 'Continue writing the following text naturally. Only output the continuation, do not repeat the original text.';
+            break;
+        case 'rewrite':
+            systemPrompt = 'Rewrite the following text to improve clarity and style. Only output the rewritten text.';
+            break;
+        case 'translate':
+            systemPrompt = 'Translate the following text. If it is in Chinese, translate to English. If it is in English, translate to Chinese. Only output the translation.';
+            break;
+        case 'summarize':
+            systemPrompt = 'Summarize the following text concisely. Only output the summary.';
+            break;
+        case 'custom': {
+            const prompt = window.prompt(aiT('ai_custom_prompt'));
+            if (!prompt) return;
+            systemPrompt = prompt;
+            break;
+        }
+    }
+
+    // Show result container below toolbar
+    if (_aiToolbar) _aiToolbar.remove();
+    _aiToolbar = null;
+
+    const editorWrap = document.getElementById('editor-wrap');
+    const coords = editor.view.coordsAtPos(editor.state.selection.to);
+    const wrapRect = editorWrap.getBoundingClientRect();
+
+    _aiResultContainer = document.createElement('div');
+    _aiResultContainer.className = 'ai-result-container';
+    _aiResultContainer.style.top = (coords.bottom - wrapRect.top + editorWrap.scrollTop + 8) + 'px';
+    _aiResultContainer.style.left = Math.max(0, coords.left - wrapRect.left - 100) + 'px';
+    _aiResultContainer.innerHTML = `
+        <div class="ai-result-text"><span class="ai-typing-cursor">▊</span></div>
+        <div class="ai-result-actions">
+            <button class="ai-btn ai-btn-primary ai-apply-btn">${aiT('ai_apply')}</button>
+            <button class="ai-btn ai-btn-outline ai-discard-btn">${aiT('ai_discard')}</button>
+        </div>
+    `;
+    editorWrap.appendChild(_aiResultContainer);
+
+    const textEl = _aiResultContainer.querySelector('.ai-result-text');
+    let resultText = '';
+
+    // Stream the response
+    const chunkHandler = (text) => {
+        resultText += text;
+        textEl.textContent = resultText;
+    };
+    const doneHandler = () => { cleanup(); };
+    const errorHandler = (err) => {
+        textEl.textContent = '⚠ Error: ' + err;
+        cleanup();
+    };
+
+    function cleanup() {
+        window.electronAPI.onAIStreamChunk(() => { });
+        window.electronAPI.onAIStreamDone(() => { });
+        window.electronAPI.onAIStreamError(() => { });
+    }
+
+    window.electronAPI.onAIStreamChunk(chunkHandler);
+    window.electronAPI.onAIStreamDone(doneHandler);
+    window.electronAPI.onAIStreamError(errorHandler);
+
+    window.electronAPI.aiStreamStart({
+        messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: selectedText },
+        ],
+    });
+
+    // Apply button
+    _aiResultContainer.querySelector('.ai-apply-btn').addEventListener('click', () => {
+        if (resultText && editor) {
+            const { from, to } = editor.state.selection;
+            if (action === 'continue') {
+                editor.chain().focus().insertContentAt(to, resultText).run();
+            } else {
+                editor.chain().focus().insertContentAt({ from, to }, resultText).run();
+            }
+        }
+        hideAIToolbar();
+    });
+
+    // Discard button
+    _aiResultContainer.querySelector('.ai-discard-btn').addEventListener('click', () => {
+        window.electronAPI.aiStreamStop();
+        hideAIToolbar();
+    });
+}
+
+// Show toolbar on selection change (mouseup)
+document.getElementById('editor-wrap').addEventListener('mouseup', () => {
+    setTimeout(() => {
+        if (!editor || isSourceMode) return;
+        const { from, to } = editor.state.selection;
+        if (from !== to && to - from > 2) {
+            showAIToolbar();
+        } else {
+            hideAIToolbar();
+        }
+    }, 100);
+});
+
+// ===== 3. AI Chat Sidebar =====
+let _chatMessages = [];
+let _chatOpen = false;
+
+function createChatPanel() {
+    if (document.getElementById('ai-chat-panel')) return;
+    const panel = document.createElement('div');
+    panel.id = 'ai-chat-panel';
+    panel.className = 'ai-chat-panel';
+    panel.innerHTML = `
+        <div class="ai-chat-header">
+            <span>${aiT('ai_chat')}</span>
+            <button id="ai-chat-close" class="ai-chat-close-btn">✕</button>
+        </div>
+        <div class="ai-chat-messages" id="ai-chat-messages"></div>
+        <div class="ai-chat-input-wrap">
+            <textarea id="ai-chat-input" placeholder="${aiT('ai_chat_placeholder')}" rows="2"></textarea>
+            <button id="ai-chat-send" class="ai-btn ai-btn-primary">${aiT('ai_chat_send')}</button>
+        </div>
+    `;
+    document.body.appendChild(panel);
+
+    document.getElementById('ai-chat-close').addEventListener('click', toggleChat);
+    document.getElementById('ai-chat-send').addEventListener('click', sendChatMessage);
+    document.getElementById('ai-chat-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendChatMessage();
+        }
+    });
+}
+
+function toggleChat() {
+    _chatOpen = !_chatOpen;
+    let panel = document.getElementById('ai-chat-panel');
+    if (!panel) {
+        createChatPanel();
+        panel = document.getElementById('ai-chat-panel');
+    }
+    panel.classList.toggle('open', _chatOpen);
+    if (_chatOpen) {
+        document.getElementById('ai-chat-input').focus();
+    }
+}
+
+function addChatBubble(role, text) {
+    const messagesEl = document.getElementById('ai-chat-messages');
+    if (!messagesEl) return null;
+    const bubble = document.createElement('div');
+    bubble.className = `ai-chat-bubble ai-chat-${role}`;
+    bubble.textContent = text;
+    messagesEl.appendChild(bubble);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return bubble;
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('ai-chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    // Check config
+    const config = await window.electronAPI.getAIConfig();
+    if (!config.apiKey && config.provider !== 'ollama') {
+        addChatBubble('assistant', aiT('ai_no_config'));
+        return;
+    }
+
+    _chatMessages.push({ role: 'user', content: text });
+    addChatBubble('user', text);
+
+    // Add context from current document
+    let docContext = '';
+    if (editor) {
+        docContext = editor.state.doc.textContent.slice(0, 2000);
+    }
+
+    const systemMsg = {
+        role: 'system',
+        content: `You are a helpful writing assistant. The user is working on a Markdown document. Here is the current document context (first 2000 chars):\n\n${docContext}\n\nRespond helpfully and concisely.`
+    };
+
+    // Create assistant bubble for streaming
+    const bubble = addChatBubble('assistant', '');
+    let responseText = '';
+
+    window.electronAPI.onAIStreamChunk((chunk) => {
+        responseText += chunk;
+        if (bubble) bubble.textContent = responseText;
+        const messagesEl = document.getElementById('ai-chat-messages');
+        if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+
+    window.electronAPI.onAIStreamDone(() => {
+        _chatMessages.push({ role: 'assistant', content: responseText });
+    });
+
+    window.electronAPI.onAIStreamError((err) => {
+        if (bubble) bubble.textContent = '⚠ ' + err;
+    });
+
+    window.electronAPI.aiStreamStart({
+        messages: [systemMsg, ..._chatMessages],
+    });
+}
+
+// ===== 4. Autocomplete =====
+let _autocompleteTimer = null;
+let _ghostOverlay = null;
+
+function scheduleAutocomplete() {
+    clearAutocomplete();
+    if (isSourceMode || !editor) return;
+
+    _autocompleteTimer = setTimeout(async () => {
+        if (!editor || isSourceMode) return;
+
+        const config = await window.electronAPI.getAIConfig();
+        if (!config.apiKey && config.provider !== 'ollama') return;
+
+        const { from } = editor.state.selection;
+        if (from < 10) return; // Don't autocomplete at very beginning
+
+        // Get text before cursor (last 500 chars)
+        const textBefore = editor.state.doc.textBetween(Math.max(0, from - 500), from, '\n');
+        if (!textBefore.trim()) return;
+
+        try {
+            const res = await window.electronAPI.aiChat({
+                messages: [
+                    { role: 'system', content: 'You are an autocomplete engine. Given partial text, predict the next 1-2 sentences the user would write. Output ONLY the continuation, nothing else. Keep it short and natural. If you cannot predict, output nothing.' },
+                    { role: 'user', content: textBefore },
+                ],
+            });
+            if (res.error || !res.result) return;
+            const suggestion = res.result.trim();
+            if (!suggestion || suggestion.length < 3) return;
+
+            // Check cursor hasn't moved
+            if (editor.state.selection.from !== from) return;
+
+            showGhostText(suggestion);
+        } catch { }
+    }, 2000);
+}
+
+function showGhostText(text) {
+    clearGhostText();
+    if (!editor) return;
+
+    const pos = editor.state.selection.from;
+    const coords = editor.view.coordsAtPos(pos);
+    const editorWrap = document.getElementById('editor-wrap');
+    const wrapRect = editorWrap.getBoundingClientRect();
+
+    _ghostOverlay = document.createElement('span');
+    _ghostOverlay.className = 'ai-ghost-text';
+    _ghostOverlay.textContent = text;
+    _ghostOverlay.dataset.suggestion = text;
+    _ghostOverlay.style.position = 'absolute';
+    _ghostOverlay.style.top = (coords.top - wrapRect.top + editorWrap.scrollTop) + 'px';
+    _ghostOverlay.style.left = (coords.left - wrapRect.left) + 'px';
+    editorWrap.appendChild(_ghostOverlay);
+}
+
+function clearGhostText() {
+    if (_ghostOverlay) { _ghostOverlay.remove(); _ghostOverlay = null; }
+}
+
+function clearAutocomplete() {
+    if (_autocompleteTimer) { clearTimeout(_autocompleteTimer); _autocompleteTimer = null; }
+    clearGhostText();
+}
+
+function acceptGhostText() {
+    if (!_ghostOverlay || !editor) return false;
+    const text = _ghostOverlay.dataset.suggestion;
+    clearGhostText();
+    if (text) {
+        editor.chain().focus().insertContent(text).run();
+    }
+    return true;
+}
+
+// ===== AI Keyboard Shortcuts =====
+document.addEventListener('keydown', (e) => {
+    // Cmd+Shift+L — toggle chat
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'l') {
+        e.preventDefault();
+        toggleChat();
+        return;
+    }
+    // Tab — accept ghost text
+    if (e.key === 'Tab' && _ghostOverlay) {
+        e.preventDefault();
+        acceptGhostText();
+        return;
+    }
+    // Escape — clear ghost text or close AI stuff
+    if (e.key === 'Escape') {
+        if (_ghostOverlay) { clearGhostText(); return; }
+        if (_aiResultContainer) { hideAIToolbar(); return; }
+        if (_chatOpen) { toggleChat(); return; }
+    }
+});
+
+// ===== Menu Command for AI Settings =====
+if (window.electronAPI?.onMenuCommand) {
+    const _origOnMenuCommand = window.electronAPI.onMenuCommand;
+    window.electronAPI.onMenuCommand((data) => {
+        if (data.command === 'ai-settings') {
+            createAISettingsModal();
+            return;
+        }
+        // Let existing handler process other commands — it's already registered above
+    });
+}
+
+// ===== Trigger autocomplete on typing =====
+if (editor) {
+    const origOnUpdate = editor.options.onUpdate;
+    editor.on('update', ({ editor: ed }) => {
+        // Schedule autocomplete after each edit
+        if (!isSourceMode) scheduleAutocomplete();
+    });
+}
+
+// ===== Create chat panel on load =====
+createChatPanel();
+

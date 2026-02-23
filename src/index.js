@@ -2,6 +2,7 @@
 const { app, BrowserWindow, Menu, dialog, ipcMain, nativeImage, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const { callAI } = require('./ai-service');
 
 // ===== Inline i18n =====
 const i18nLocales = {
@@ -25,6 +26,7 @@ const i18nLocales = {
     btnSave: '保存', btnDontSave: '不保存', btnCancel: '取消',
     confirmDelete: '确定删除', deleteIrreversible: '此操作不可撤销', btnDelete: '删除',
     newMarkdown: '新建 Markdown 文件',
+    aiSettings: 'AI 设置…',
   },
   en: {
     about: 'About Mink', hide: 'Hide', hideOthers: 'Hide Others', showAll: 'Show All', quit: 'Quit',
@@ -46,6 +48,7 @@ const i18nLocales = {
     btnSave: 'Save', btnDontSave: "Don't Save", btnCancel: 'Cancel',
     confirmDelete: 'Confirm delete', deleteIrreversible: 'This action cannot be undone', btnDelete: 'Delete',
     newMarkdown: 'New Markdown File',
+    aiSettings: 'AI Settings…',
   },
 };
 let currentLang = 'zh';
@@ -429,6 +432,72 @@ ipcMain.handle('rename-file', async (_, oldPath, newName) => {
   }
 });
 
+// ===== AI IPC Handlers =====
+let _activeAIStream = null;
+
+ipcMain.handle('get-ai-config', () => {
+  const config = loadConfig();
+  return config.ai || { provider: 'openai', apiKey: '', model: '', baseUrl: '' };
+});
+
+ipcMain.handle('set-ai-config', (_, aiConfig) => {
+  const config = loadConfig();
+  config.ai = aiConfig;
+  saveConfig(config);
+  return { success: true };
+});
+
+ipcMain.handle('ai-chat', async (_, opts) => {
+  try {
+    const config = loadConfig();
+    const ai = config.ai || {};
+    const result = await callAI({
+      provider: opts.provider || ai.provider || 'openai',
+      apiKey: opts.apiKey || ai.apiKey,
+      model: opts.model || ai.model,
+      baseUrl: opts.baseUrl || ai.baseUrl,
+      messages: opts.messages,
+      stream: false,
+    });
+    return { result };
+  } catch (e) {
+    return { error: e.message };
+  }
+});
+
+ipcMain.handle('ai-stream-start', async (_, opts) => {
+  try {
+    const config = loadConfig();
+    const ai = config.ai || {};
+    _activeAIStream = 'running';
+
+    const result = await callAI({
+      provider: opts.provider || ai.provider || 'openai',
+      apiKey: opts.apiKey || ai.apiKey,
+      model: opts.model || ai.model,
+      baseUrl: opts.baseUrl || ai.baseUrl,
+      messages: opts.messages,
+      stream: true,
+      onChunk: (text) => {
+        if (_activeAIStream === 'stopped') return;
+        mainWindow?.webContents.send('ai-stream-chunk', text);
+      },
+    });
+
+    _activeAIStream = null;
+    mainWindow?.webContents.send('ai-stream-done', result);
+    return { success: true };
+  } catch (e) {
+    _activeAIStream = null;
+    mainWindow?.webContents.send('ai-stream-error', e.message);
+    return { error: e.message };
+  }
+});
+
+ipcMain.on('ai-stream-stop', () => {
+  _activeAIStream = 'stopped';
+});
+
 // ===== Menu =====
 function buildMenu() {
   const isMac = process.platform === 'darwin';
@@ -622,6 +691,11 @@ function buildMenu() {
               detail: 'Copyright (c) 2024 irwinai\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction.',
             });
           },
+        },
+        { type: 'separator' },
+        {
+          label: t('aiSettings') || 'AI Settings…',
+          click: () => sendCmd('ai-settings'),
         },
       ],
     },
