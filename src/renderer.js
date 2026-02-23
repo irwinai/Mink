@@ -1673,15 +1673,20 @@ function createAISettingsModal() {
         const resultEl = document.getElementById('ai-test-result');
         resultEl.textContent = aiT('testing');
         resultEl.className = '';
+        const formConfig = {
+            provider: document.getElementById('ai-provider').value,
+            apiKey: document.getElementById('ai-api-key').value,
+            model: document.getElementById('ai-model').value,
+            baseUrl: document.getElementById('ai-base-url').value,
+        };
         try {
             const res = await window.electronAPI.aiChat({
-                provider: document.getElementById('ai-provider').value,
-                apiKey: document.getElementById('ai-api-key').value,
-                model: document.getElementById('ai-model').value,
-                baseUrl: document.getElementById('ai-base-url').value,
+                ...formConfig,
                 messages: [{ role: 'user', content: 'Say "OK" and nothing else.' }],
             });
             if (res.error) throw new Error(res.error);
+            // Auto-save on success
+            await window.electronAPI.setAIConfig(formConfig);
             resultEl.textContent = aiT('connected');
             resultEl.className = 'ai-test-ok';
         } catch (e) {
