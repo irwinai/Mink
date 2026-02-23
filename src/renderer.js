@@ -1747,6 +1747,12 @@ function showAIToolbar() {
     _aiToolbar.style.left = (coords.left - wrapRect.left) + 'px';
     editorWrap.appendChild(_aiToolbar);
 
+    // Prevent any mousedown on toolbar from propagating to editor-wrap
+    _aiToolbar.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    });
+
     // Use mousedown + preventDefault to prevent stealing focus from editor
     _aiToolbar.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('mousedown', (e) => {
@@ -1868,7 +1874,10 @@ async function handleAIAction(action) {
 }
 
 // Show toolbar on selection change (mouseup)
-document.getElementById('editor-wrap').addEventListener('mouseup', () => {
+document.getElementById('editor-wrap').addEventListener('mouseup', (e) => {
+    // Don't hide toolbar if clicking on the toolbar itself
+    if (_aiToolbar && _aiToolbar.contains(e.target)) return;
+    if (_aiResultContainer && _aiResultContainer.contains(e.target)) return;
     setTimeout(() => {
         if (!editor || isSourceMode) return;
         const { from, to } = editor.state.selection;
@@ -1877,7 +1886,7 @@ document.getElementById('editor-wrap').addEventListener('mouseup', () => {
         } else {
             hideAIToolbar();
         }
-    }, 100);
+    }, 150);
 });
 
 // ===== 3. AI Chat Sidebar =====

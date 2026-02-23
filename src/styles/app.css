@@ -566,7 +566,7 @@ body {
 }
 
 .ai-btn-primary {
-    background: var(--accent, #07C160);
+    background: #07C160;
     color: #fff;
 }
 
@@ -576,13 +576,13 @@ body {
 
 .ai-btn-outline {
     background: transparent;
-    border: 1px solid var(--border, #333);
-    color: var(--fg, #ccc);
+    border: 1px solid #444;
+    color: #ccc;
 }
 
 .ai-btn-outline:hover {
-    border-color: var(--accent, #07C160);
-    color: var(--accent, #07C160);
+    border-color: #07C160;
+    color: #07C160;
 }
 
 /* ===== AI: Settings Modal ===== */
@@ -717,7 +717,7 @@ body {
     background: transparent;
     border: none;
     border-radius: 6px;
-    color: #999;
+    color: #e0e0e0;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
