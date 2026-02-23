@@ -1631,10 +1631,10 @@ function createAISettingsModal() {
             </div>
             <div class="ai-form-actions">
                 <button id="ai-test-btn" class="ai-btn ai-btn-outline">${aiT('test_conn')}</button>
-                <span id="ai-test-result"></span>
                 <div style="flex:1"></div>
                 <button id="ai-cancel-btn" class="ai-btn ai-btn-outline">${aiT('cancel')}</button>
                 <button id="ai-save-btn" class="ai-btn ai-btn-primary">${aiT('save')}</button>
+                <div id="ai-test-result"></div>
             </div>
         </div>
     `;

@@ -659,23 +659,30 @@ body {
 
 .ai-form-actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     margin-top: 20px;
 }
 
+.ai-form-actions .ai-btn:last-child {
+    margin-left: auto;
+}
+
+#ai-test-result {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-all;
+}
+
 .ai-test-ok {
     color: #4ade80;
-    font-size: 13px;
 }
 
 .ai-test-fail {
     color: #f87171;
-    font-size: 13px;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 /* ===== AI: Inline Toolbar ===== */
