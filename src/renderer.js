@@ -1833,7 +1833,17 @@ async function handleAIAction(action) {
     };
     const doneHandler = () => { cleanup(); };
     const errorHandler = (err) => {
-        textEl.textContent = '⚠ Error: ' + err;
+        // Parse friendly error message
+        let msg = err;
+        try {
+            const parsed = JSON.parse(err.replace(/^API \d+: /, ''));
+            msg = parsed.error?.message || err;
+        } catch { }
+        textEl.textContent = '⚠ ' + msg;
+        textEl.style.color = '#f87171';
+        // Hide Apply button on error — nothing to apply
+        const applyBtn = _aiResultContainer?.querySelector('.ai-apply-btn');
+        if (applyBtn) applyBtn.style.display = 'none';
         cleanup();
     };
 
@@ -1854,13 +1864,15 @@ async function handleAIAction(action) {
         ],
     });
 
-    // Apply button
+    // Apply button — insert as plain text to avoid breaking editor
     _aiResultContainer.querySelector('.ai-apply-btn').addEventListener('click', () => {
         if (resultText && editor) {
             if (action === 'continue') {
-                editor.chain().focus().insertContentAt(to, resultText).run();
+                // Insert after selection
+                editor.chain().focus().setTextSelection(to).insertContent(resultText).run();
             } else {
-                editor.chain().focus().insertContentAt({ from, to }, resultText).run();
+                // Replace selection with result
+                editor.chain().focus().setTextSelection({ from, to }).deleteSelection().insertContent(resultText).run();
             }
         }
         hideAIToolbar();
