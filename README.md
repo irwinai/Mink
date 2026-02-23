@@ -10,6 +10,10 @@
 
 - **WYSIWYG** — Type Markdown, see it rendered instantly
 - **Minimalist UI** — Distraction-free writing experience
+- **AI Writing Assistant** — Select text → Continue / Rewrite / Translate / Summarize
+- **AI Chat Sidebar** — Context-aware AI chat panel (`Cmd+Shift+L`)
+- **AI Autocomplete** — Smart ghost-text suggestions, Tab to accept
+- **Multi-AI Provider** — OpenAI, Claude, Ollama — configure in Settings
 - **File Management** — Sidebar file tree with create/rename/delete
 - **Outline Navigation** — Auto-generated heading outline
 - **Source Mode** — Toggle raw Markdown with `Cmd+/`
@@ -47,6 +51,7 @@ npm run make
 | `Cmd+1~4` | Heading 1-4 |
 | `Cmd+/` | Source code mode |
 | `Cmd+\` | Toggle sidebar |
+| `Cmd+Shift+L` | AI Chat sidebar |
 
 ## 🏗 Tech Stack
 
