@@ -67,7 +67,13 @@ function _jsonReq(url, headers, body) {
     const lib = url.protocol === 'https:' ? https : http;
     const req = lib.request(url, { method: 'POST', headers }, (res) => {
       let d = ''; res.on('data', c => d += c);
-      res.on('end', () => { try { resolve(JSON.parse(d)); } catch { reject(new Error(`Invalid JSON: ${d.slice(0, 200)}`)); } });
+      res.on('end', () => {
+        if (res.statusCode >= 400) {
+          reject(new Error(`API ${res.statusCode}: ${d.slice(0, 300)}`));
+          return;
+        }
+        try { resolve(JSON.parse(d)); } catch { reject(new Error(`Invalid JSON: ${d.slice(0, 200)}`)); }
+      });
     });
     req.on('error', reject);
     req.setTimeout(60000, () => { req.destroy(); reject(new Error('Timeout')); });
@@ -559,13 +565,18 @@ ipcMain.handle('ai-stream-start', async (_, opts) => {
   try {
     const config = loadConfig();
     const ai = config.ai || {};
+    const provider = opts.provider || ai.provider || 'openai';
+    const apiKey = opts.apiKey || ai.apiKey || '';
+    const model = opts.model || ai.model || '';
+    const baseUrl = opts.baseUrl || ai.baseUrl || '';
+    console.log('[AI Stream] provider:', provider, 'apiKey:', apiKey ? apiKey.slice(0, 8) + '...' : '(empty)', 'model:', model, 'baseUrl:', baseUrl || '(default)');
     _activeAIStream = 'running';
 
     const result = await callAI({
-      provider: opts.provider || ai.provider || 'openai',
-      apiKey: opts.apiKey || ai.apiKey,
-      model: opts.model || ai.model,
-      baseUrl: opts.baseUrl || ai.baseUrl,
+      provider,
+      apiKey,
+      model,
+      baseUrl,
       messages: opts.messages,
       stream: true,
       onChunk: (text) => {
