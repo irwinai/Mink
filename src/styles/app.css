@@ -598,20 +598,21 @@ body {
 }
 
 .ai-modal {
-    background: var(--bg-secondary, #1e1e1e);
-    border: 1px solid var(--border, #333);
+    background: #1a1a1a;
+    border: 1px solid #333;
     border-radius: 14px;
     padding: 28px 32px;
     width: 460px;
     max-width: 95vw;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    color: #e8e8e8;
 }
 
 .ai-modal h2 {
     font-size: 18px;
     font-weight: 700;
     margin-bottom: 20px;
-    color: var(--fg, #eee);
+    color: #e8e8e8;
 }
 
 .ai-form-group {
@@ -622,7 +623,7 @@ body {
     display: block;
     font-size: 12px;
     font-weight: 600;
-    color: var(--fg-secondary, #888);
+    color: #999;
     margin-bottom: 5px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -632,19 +633,28 @@ body {
 .ai-form-group input {
     width: 100%;
     padding: 8px 12px;
-    background: var(--bg, #111);
-    border: 1px solid var(--border, #333);
+    background: #111;
+    border: 1px solid #333;
     border-radius: 8px;
-    color: var(--fg, #eee);
+    color: #e8e8e8;
     font-size: 14px;
     font-family: var(--font-sans);
     outline: none;
     transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.ai-form-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
 }
 
 .ai-form-group select:focus,
 .ai-form-group input:focus {
-    border-color: var(--accent, #07C160);
+    border-color: #07C160;
 }
 
 .ai-form-actions {
