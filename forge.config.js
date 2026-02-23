@@ -7,10 +7,16 @@ module.exports = {
     asar: true,
     name: 'Mink',
     icon: './assets/icon',
-    executableName: 'mink',
+    executableName: 'Mink',
   },
   rebuildConfig: {},
   makers: [
+    {
+      name: '@electron-forge/maker-dmg',
+      config: {
+        format: 'ULFO',
+      },
+    },
     {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin'],

@@ -66,8 +66,10 @@ function resolveIcon() {
   return null;
 }
 
-// Handle Squirrel startup
-if (require('electron-squirrel-startup')) app.quit();
+// Handle Squirrel startup (Windows only)
+if (process.platform === 'win32') {
+  try { if (require('electron-squirrel-startup')) app.quit(); } catch { }
+}
 
 // Set app name (shows in macOS menu bar)
 app.name = 'Mink';

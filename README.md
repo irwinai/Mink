@@ -64,13 +64,13 @@ npm run make
 | Turndown + Marked | Markdown ↔ HTML |
 | lowlight | 代码语法高亮 |
 
-### � 打包部署
+### 📦 打包部署
 
 ```bash
 # 打包成 macOS .app（未签名，本地使用）
 npm run package
 
-# 生成可分发的 .zip
+# 生成可分发的 .dmg + .zip
 npm run make
 ```
 
@@ -79,12 +79,13 @@ npm run make
 | 命令 | 产物路径 | 格式 |
 |------|---------|------|
 | `npm run package` | `out/Mink-darwin-arm64/Mink.app` | 可直接运行的 .app |
+| `npm run make` | `out/make/Mink-x.x.x-arm64.dmg` | macOS 安装镜像 |
 | `npm run make` | `out/make/zip/darwin/arm64/` | 可分发的 .zip |
 
 > **注意**：如需发布到 Mac App Store 或让其他用户无警告运行，  
 > 需要配置 Apple Developer 签名证书。
 
-### �📜 许可证
+### 📜 许可证
 
 [MIT](LICENSE)
 
@@ -150,13 +151,13 @@ npm run make
 | Turndown + Marked | Markdown ↔ HTML conversion |
 | lowlight (highlight.js) | Code syntax highlighting |
 
-### � Packaging & Distribution
+### 📦 Packaging & Distribution
 
 ```bash
 # Package as macOS .app (unsigned, for local use)
 npm run package
 
-# Build distributable .zip
+# Build distributable .dmg + .zip
 npm run make
 ```
 
@@ -165,12 +166,13 @@ Output in the `out/` directory:
 | Command | Output Path | Format |
 |---------|-----------|--------|
 | `npm run package` | `out/Mink-darwin-arm64/Mink.app` | Runnable .app bundle |
+| `npm run make` | `out/make/Mink-x.x.x-arm64.dmg` | macOS disk image |
 | `npm run make` | `out/make/zip/darwin/arm64/` | Distributable .zip |
 
 > **Note**: To distribute via the Mac App Store or allow other users to run without Gatekeeper warnings,
 > you'll need to configure Apple Developer code signing.
 
-### �📜 License
+### 📜 License
 
 [MIT](LICENSE)
 

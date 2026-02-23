@@ -27,7 +27,7 @@
     --text-secondary: #666666;
     --text-muted: #999999;
     --text-code: #e06c75;
-    --text-link: #4CAF50;
+    --text-link: #07C160;
 
     --border: #e8e8e8;
     --border-light: #f0f0f0;
@@ -39,8 +39,8 @@
     --sidebar-width: 260px;
     --statusbar-height: 28px;
 
-    --accent: #4CAF50;
-    --accent-hover: #388E3C;
+    --accent: #07C160;
+    --accent-hover: #06AD56;
 }
 
 [data-theme="dark"] {
@@ -56,7 +56,7 @@
     --text-secondary: #969696;
     --text-muted: #666666;
     --text-code: #e06c75;
-    --text-link: #66BB6A;
+    --text-link: #2BD975;
 
     --border: #333333;
     --border-light: #2a2a2a;
@@ -513,7 +513,7 @@ body {
 
 #search-bar input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    box-shadow: 0 0 0 2px rgba(7, 193, 96, 0.25);
 }
 
 #search-bar button {

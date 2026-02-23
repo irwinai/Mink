@@ -608,9 +608,8 @@ const TyporaItalic = Italic.extend({
 let _wysiwygComposing = false;
 
 function updateEditorCursor() {
-    // Use native caret in WYSIWYG; the overlay cursor causes marker-mode jitter.
-    const existing = document.getElementById('editor-cursor');
-    if (existing) existing.classList.add('hidden');
+    const cursorEl = document.getElementById('editor-cursor');
+    if (cursorEl) cursorEl.classList.add('hidden');
 }
 
 // ===== Editor Instance =====
@@ -670,8 +669,14 @@ function initEditor() {
                     setTimeout(() => updateEditorCursor(), 20);
                     return false;
                 },
+                focus: () => {
+                    updateEditorCursor();
+                    requestAnimationFrame(updateEditorCursor);
+                    return false;
+                },
                 blur: () => {
                     if (_activeInlineReveal) collapseInlineReveal(editor);
+                    updateEditorCursor();
                     return false;
                 },
             },
