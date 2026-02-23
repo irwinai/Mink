@@ -114,6 +114,24 @@ body {
     transform: translateY(-1px);
 }
 
+.btn-lang {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+
+.btn-lang:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
 /* ===== Hero ===== */
 .hero {
     position: relative;
@@ -651,8 +669,12 @@ kbd {
 }
 
 @media (max-width: 600px) {
-    .nav-links a:not(.btn-nav) {
+    .nav-links a:not(.btn-nav):not(.btn-lang) {
         display: none;
+    }
+
+    .nav-links button.btn-lang {
+        display: inline-block;
     }
 
     .features-grid {
