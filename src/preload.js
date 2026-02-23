@@ -29,9 +29,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     aiChat: (opts) => ipcRenderer.invoke('ai-chat', opts),
     aiStreamStart: (opts) => ipcRenderer.invoke('ai-stream-start', opts),
     aiStreamStop: () => ipcRenderer.send('ai-stream-stop'),
-    onAIStreamChunk: (callback) => ipcRenderer.on('ai-stream-chunk', (_, text) => callback(text)),
-    onAIStreamDone: (callback) => ipcRenderer.on('ai-stream-done', (_, text) => callback(text)),
-    onAIStreamError: (callback) => ipcRenderer.on('ai-stream-error', (_, err) => callback(err)),
+    onAIStreamChunk: (callback) => { ipcRenderer.removeAllListeners('ai-stream-chunk'); ipcRenderer.on('ai-stream-chunk', (_, text) => callback(text)); },
+    onAIStreamDone: (callback) => { ipcRenderer.removeAllListeners('ai-stream-done'); ipcRenderer.on('ai-stream-done', (_, text) => callback(text)); },
+    onAIStreamError: (callback) => { ipcRenderer.removeAllListeners('ai-stream-error'); ipcRenderer.on('ai-stream-error', (_, err) => callback(err)); },
     getAIConfig: () => ipcRenderer.invoke('get-ai-config'),
     setAIConfig: (config) => ipcRenderer.invoke('set-ai-config', config),
 });
