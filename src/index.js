@@ -123,12 +123,6 @@ function createWindow() {
     },
   });
 
-  // Show window only after content is fully rendered
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.maximize();
-    mainWindow.show();
-  });
-
   // Load the app - Vite plugin injects these variables
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -142,6 +136,12 @@ function createWindow() {
 
   // On page load: welcome doc (first time only) + restore last folder
   mainWindow.webContents.on('did-finish-load', () => {
+    // Avoid first-paint FOUC: show only after renderer has finished loading.
+    if (!mainWindow.isVisible()) {
+      mainWindow.maximize();
+      mainWindow.show();
+    }
+
     const config = loadConfig();
 
     // Show welcome doc only on very first launch
