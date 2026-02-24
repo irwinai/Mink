@@ -745,8 +745,8 @@ function buildMenu() {
         { type: 'separator' },
         { label: t('toggleTheme'), click: () => sendCmd('toggle-theme') },
         { type: 'separator' },
-        { label: t('toggleFullscreen'), accelerator: 'F', role: 'togglefullscreen' },
-        { label: t('toggleDevTools'), accelerator: 'Alt+CmdOrCtrl+I', role: 'toggleDevTools' },
+        { label: t('toggleFullscreen'), accelerator: 'Ctrl+Cmd+F', click: () => { if (mainWindow) mainWindow.setFullScreen(!mainWindow.isFullScreen()); } },
+        { label: t('toggleDevTools'), accelerator: 'Alt+CmdOrCtrl+I', click: () => { if (mainWindow) mainWindow.webContents.toggleDevTools(); } },
       ],
     },
     {
