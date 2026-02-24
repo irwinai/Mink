@@ -4,6 +4,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const https = require('https');
 const http = require('http');
+const { autoUpdater } = require('electron-updater');
 
 // ===== Inlined AI Service =====
 async function callAI(opts) {
@@ -127,6 +128,7 @@ const i18nLocales = {
     toggleSource: '源代码模式', toggleTheme: '切换主题',
     toggleFullscreen: '切换全屏', toggleDevTools: '开发者工具',
     ai: 'AI', aiAutocomplete: 'AI 补全', aiChat: 'AI 对话', aiSettings: 'AI 设置…',
+    checkUpdate: '检查更新…',
     help: '帮助', website: '官方网站', changelog: '更新日志', reportBug: '报告问题',
     openSource: '开源信息', license: '开源协议',
     language: '语言', chinese: '中文', english: 'English',
@@ -151,6 +153,7 @@ const i18nLocales = {
     toggleSource: 'Source Mode', toggleTheme: 'Toggle Theme',
     toggleFullscreen: 'Toggle Full Screen', toggleDevTools: 'Developer Tools',
     ai: 'AI', aiAutocomplete: 'AI Autocomplete', aiChat: 'AI Chat', aiSettings: 'AI Settings…',
+    checkUpdate: 'Check for Updates…',
     help: 'Help', website: 'Official Website', changelog: 'Changelog', reportBug: 'Report Issue',
     openSource: 'Open Source Info', license: 'License',
     language: 'Language', chinese: '中文', english: 'English',
@@ -795,6 +798,8 @@ function buildMenu() {
           click: () => shell.openExternal('https://github.com/irwinai/Mink/issues'),
         },
         { type: 'separator' },
+        { label: t('checkUpdate'), click: () => { autoUpdater.checkForUpdatesAndNotify(); } },
+        { type: 'separator' },
         {
           label: t('openSource'),
           click: () => {
@@ -870,6 +875,42 @@ app.whenReady().then(() => {
     } catch { }
   }
   createWindow();
+
+  // ===== Auto-Updater =====
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => {
+    if (mainWindow) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: getLang() === 'zh' ? '发现新版本' : 'Update Available',
+        message: getLang() === 'zh' ? `发现新版本 v${info.version}，正在后台下载…` : `Version v${info.version} is available. Downloading in background...`,
+      });
+    }
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    if (mainWindow) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: getLang() === 'zh' ? '更新已就绪' : 'Update Ready',
+        message: getLang() === 'zh' ? `v${info.version} 已下载完成，重启后自动安装。` : `v${info.version} has been downloaded. It will be installed on restart.`,
+        buttons: [getLang() === 'zh' ? '立即重启' : 'Restart Now', getLang() === 'zh' ? '稍后' : 'Later'],
+      }).then(({ response }) => {
+        if (response === 0) autoUpdater.quitAndInstall();
+      });
+    }
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('Auto-updater error:', err);
+  });
+
+  // Check for updates after launch (in production only)
+  if (app.isPackaged) {
+    setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 3000);
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

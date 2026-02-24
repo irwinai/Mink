@@ -9,6 +9,16 @@ module.exports = {
     icon: './assets/icon',
     executableName: 'Mink',
   },
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: { owner: 'irwinai', name: 'Mink' },
+        prerelease: false,
+        draft: true,
+      },
+    },
+  ],
   rebuildConfig: {},
   makers: [
     {
