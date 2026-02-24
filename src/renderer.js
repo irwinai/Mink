@@ -1238,10 +1238,15 @@ if (api) {
         if (sidebar.classList.contains('hidden')) {
             sidebar.classList.remove('hidden');
         }
-        // Switch to files tab
+        // Switch to files tab and show folder name
         document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
-        document.querySelector('[data-tab="files"]').classList.add('active');
+        const filesTab = document.querySelector('[data-tab="files"]');
+        filesTab.classList.add('active');
+        if (data.path) {
+            const folderName = data.path.split('/').pop() || data.path;
+            filesTab.textContent = '📁 ' + folderName;
+        }
         document.getElementById('file-tree').classList.add('active');
 
         renderFileTree(data.tree, document.getElementById('file-tree'));
