@@ -249,13 +249,28 @@ function createWindow() {
   updateTitle();
   buildMenu();
 
+  // Show window only after first paint — prevents FOUC
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.maximize();
+    mainWindow.show();
+  });
+
   // On page load: restore last file/folder, fallback to welcome doc.
   mainWindow.webContents.on('did-finish-load', () => {
     const config = loadConfig();
     let restoredLastFile = false;
 
-    // Restore last opened file first.
-    if (!currentFilePath && config.lastFile && fs.existsSync(config.lastFile)) {
+    // If we already have a file open (HMR reload), re-send it
+    if (currentFilePath && fs.existsSync(currentFilePath)) {
+      try {
+        const content = fs.readFileSync(currentFilePath, 'utf-8');
+        mainWindow.webContents.send('file-opened', { content, path: currentFilePath });
+        restoredLastFile = true;
+      } catch { }
+    }
+
+    // Restore last opened file on fresh start
+    if (!restoredLastFile && !currentFilePath && config.lastFile && fs.existsSync(config.lastFile)) {
       try {
         const content = fs.readFileSync(config.lastFile, 'utf-8');
         currentFilePath = config.lastFile;
@@ -295,12 +310,6 @@ function createWindow() {
       currentFolderPath = config.lastFolder;
       const tree = readFolderTree(config.lastFolder);
       mainWindow.webContents.send('folder-opened', { path: config.lastFolder, tree });
-    }
-
-    // Avoid first-paint FOUC: show only after initial restore work is done.
-    if (!mainWindow.isVisible()) {
-      mainWindow.maximize();
-      mainWindow.show();
     }
   });
 }

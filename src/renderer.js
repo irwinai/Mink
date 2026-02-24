@@ -1176,17 +1176,30 @@ function updateSourceLineHighlight() {
 }
 
 // ===== Theme =====
-let currentTheme = localStorage.getItem('mink-theme') || 'light';
+let currentTheme = localStorage.getItem('mink-theme') || 'auto';
+
+function getSystemTheme() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
 
 function applyTheme(theme) {
     currentTheme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
-    document.getElementById('btn-theme').textContent = theme === 'dark' ? '☀️' : '🌙';
+    const effectiveTheme = theme === 'auto' ? getSystemTheme() : theme;
+    document.documentElement.setAttribute('data-theme', effectiveTheme);
+    const icons = { light: '🌙', dark: '☀️', auto: '💻' };
+    document.getElementById('btn-theme').textContent = icons[theme] || '💻';
     localStorage.setItem('mink-theme', theme);
 }
 
+// Listen for system theme changes when in auto mode
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (currentTheme === 'auto') applyTheme('auto');
+});
+
 document.getElementById('btn-theme').addEventListener('click', () => {
-    applyTheme(currentTheme === 'light' ? 'dark' : 'light');
+    const order = ['light', 'dark', 'auto'];
+    const next = order[(order.indexOf(currentTheme) + 1) % order.length];
+    applyTheme(next);
 });
 
 document.getElementById('btn-source').addEventListener('click', toggleSourceMode);
@@ -1288,7 +1301,7 @@ if (api) {
                 document.getElementById('outline-panel').classList.add('active');
                 break;
             case 'toggle-source': toggleSourceMode(); break;
-            case 'toggle-theme': applyTheme(currentTheme === 'light' ? 'dark' : 'light'); break;
+            case 'toggle-theme': { const o = ['light', 'dark', 'auto']; applyTheme(o[(o.indexOf(currentTheme) + 1) % o.length]); } break;
             case 'find': openSearchBar(); break;
         }
     });
