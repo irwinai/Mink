@@ -126,6 +126,7 @@ const i18nLocales = {
     view: '视图', toggleSidebar: '切换侧边栏', toggleOutline: '显示大纲',
     toggleSource: '源代码模式', toggleTheme: '切换主题',
     toggleFullscreen: '切换全屏', toggleDevTools: '开发者工具',
+    ai: 'AI', aiAutocomplete: 'AI 补全', aiChat: 'AI 对话', aiSettings: 'AI 设置…',
     help: '帮助', website: '官方网站', changelog: '更新日志', reportBug: '报告问题',
     openSource: '开源信息', license: '开源协议',
     language: '语言', chinese: '中文', english: 'English',
@@ -149,6 +150,7 @@ const i18nLocales = {
     view: 'View', toggleSidebar: 'Toggle Sidebar', toggleOutline: 'Show Outline',
     toggleSource: 'Source Mode', toggleTheme: 'Toggle Theme',
     toggleFullscreen: 'Toggle Full Screen', toggleDevTools: 'Developer Tools',
+    ai: 'AI', aiAutocomplete: 'AI Autocomplete', aiChat: 'AI Chat', aiSettings: 'AI Settings…',
     help: 'Help', website: 'Official Website', changelog: 'Changelog', reportBug: 'Report Issue',
     openSource: 'Open Source Info', license: 'License',
     language: 'Language', chinese: '中文', english: 'English',
@@ -749,6 +751,15 @@ function buildMenu() {
         { type: 'separator' },
         { label: t('toggleFullscreen'), accelerator: 'Ctrl+Cmd+F', click: () => { if (mainWindow) mainWindow.setFullScreen(!mainWindow.isFullScreen()); } },
         { label: t('toggleDevTools'), accelerator: 'Alt+CmdOrCtrl+I', click: () => { if (mainWindow) mainWindow.webContents.toggleDevTools(); } },
+      ],
+    },
+    {
+      label: t('ai'),
+      submenu: [
+        { label: t('aiAutocomplete'), accelerator: 'Alt+/', click: () => sendCmd('ai-autocomplete') },
+        { label: t('aiChat'), accelerator: 'CmdOrCtrl+Shift+L', click: () => sendCmd('ai-chat') },
+        { type: 'separator' },
+        { label: t('aiSettings'), click: () => sendCmd('ai-settings') },
       ],
     },
     {

@@ -1308,6 +1308,9 @@ if (api) {
             case 'toggle-source': toggleSourceMode(); break;
             case 'toggle-theme': { const o = ['light', 'dark', 'auto']; applyTheme(o[(o.indexOf(currentTheme) + 1) % o.length]); } break;
             case 'find': openSearchBar(); break;
+            case 'ai-autocomplete': triggerAutocomplete(); break;
+            case 'ai-chat': toggleChat(); break;
+            case 'ai-settings': createAISettingsModal(); break;
         }
     });
 
