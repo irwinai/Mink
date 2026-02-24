@@ -1768,6 +1768,32 @@ function hideAIToolbar() {
     if (_aiResultContainer) { _aiResultContainer.remove(); _aiResultContainer = null; }
 }
 
+function showCustomPromptModal(label) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'ai-modal-overlay';
+        overlay.innerHTML = `
+            <div class="ai-modal" style="max-width:400px">
+                <h3 style="margin-bottom:12px;font-size:15px;color:#e8e8e8">${label}</h3>
+                <textarea id="ai-custom-input" rows="3" style="width:100%;padding:8px 12px;background:#111;border:1px solid #333;border-radius:8px;color:#e8e8e8;font-size:13px;font-family:var(--font-sans);resize:none;outline:none"></textarea>
+                <div class="ai-form-actions" style="margin-top:12px">
+                    <button class="ai-btn ai-btn-outline" id="ai-custom-cancel">${aiT('cancel')}</button>
+                    <div style="flex:1"></div>
+                    <button class="ai-btn ai-btn-primary" id="ai-custom-ok">${aiT('save')}</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const input = document.getElementById('ai-custom-input');
+        input.focus();
+        const close = (val) => { overlay.remove(); resolve(val); };
+        document.getElementById('ai-custom-cancel').addEventListener('click', () => close(null));
+        document.getElementById('ai-custom-ok').addEventListener('click', () => close(input.value.trim() || null));
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); close(input.value.trim() || null); } });
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(null); });
+    });
+}
+
 async function handleAIAction(action) {
     if (!editor || !_savedAISelection) return;
     const { text: selectedText, from, to } = _savedAISelection;
@@ -1795,7 +1821,7 @@ async function handleAIAction(action) {
             systemPrompt = 'Summarize the following text concisely. Only output the summary.';
             break;
         case 'custom': {
-            const prompt = window.prompt(aiT('ai_custom_prompt'));
+            const prompt = await showCustomPromptModal(aiT('ai_custom_prompt'));
             if (!prompt) return;
             systemPrompt = prompt;
             break;
