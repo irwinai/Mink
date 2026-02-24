@@ -1864,15 +1864,16 @@ async function handleAIAction(action) {
         ],
     });
 
-    // Apply button — insert as plain text to avoid breaking editor
+    // Apply button — convert markdown to HTML before inserting into TipTap
     _aiResultContainer.querySelector('.ai-apply-btn').addEventListener('click', () => {
         if (resultText && editor) {
+            const html = markdownToHtml(resultText);
             if (action === 'continue') {
                 // Insert after selection
-                editor.chain().focus().setTextSelection(to).insertContent(resultText).run();
+                editor.chain().focus().setTextSelection(to).insertContent(html).run();
             } else {
                 // Replace selection with result
-                editor.chain().focus().setTextSelection({ from, to }).deleteSelection().insertContent(resultText).run();
+                editor.chain().focus().setTextSelection({ from, to }).deleteSelection().insertContent(html).run();
             }
         }
         hideAIToolbar();
