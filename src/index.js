@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const https = require('https');
 const http = require('http');
 const { autoUpdater } = require('electron-updater');
+let _manualUpdateCheck = false;
 
 // ===== Inlined AI Service =====
 async function callAI(opts) {
@@ -633,7 +634,24 @@ function buildMenu() {
     ...(isMac ? [{
       label: app.name,
       submenu: [
-        { role: 'about', label: t('about') },
+        {
+          label: t('about'), click: () => {
+            const iconPath = resolveIcon();
+            const icon = iconPath ? nativeImage.createFromPath(iconPath) : undefined;
+            const isZh = getLang() === 'zh';
+            const desc = isZh
+              ? `版本 ${app.getVersion()}\n\n一个简约的所见即所得 Markdown 编辑器\n\n© 2024 irwinai`
+              : `Version ${app.getVersion()}\n\nA minimalist WYSIWYG Markdown editor\n\n© 2024 irwinai`;
+            const buttons = [isZh ? '官方网站' : 'Website', 'GitHub', isZh ? '关闭' : 'Close'];
+            dialog.showMessageBox(mainWindow, {
+              type: 'info', icon, title: t('about'), message: 'Mink', detail: desc,
+              buttons, defaultId: 2, cancelId: 2,
+            }).then(({ response }) => {
+              if (response === 0) shell.openExternal('https://mink.irwinai.com');
+              if (response === 1) shell.openExternal('https://github.com/irwinai/Mink');
+            });
+          }
+        },
         { type: 'separator' },
         { role: 'hide', label: t('hide') },
         { role: 'hideOthers', label: t('hideOthers') },
@@ -798,7 +816,18 @@ function buildMenu() {
           click: () => shell.openExternal('https://github.com/irwinai/Mink/issues'),
         },
         { type: 'separator' },
-        { label: t('checkUpdate'), click: () => { autoUpdater.checkForUpdatesAndNotify(); } },
+        {
+          label: t('checkUpdate'), click: () => {
+            if (!app.isPackaged) {
+              dialog.showMessageBox(mainWindow, { type: 'info', title: t('checkUpdate'), message: getLang() === 'zh' ? '开发模式下无法检查更新，请使用打包后的应用。' : 'Update check is only available in the packaged app.' });
+              return;
+            }
+            _manualUpdateCheck = true;
+            autoUpdater.checkForUpdates().catch(err => {
+              dialog.showMessageBox(mainWindow, { type: 'error', title: getLang() === 'zh' ? '检查更新失败' : 'Update Check Failed', message: String(err.message || err) });
+            });
+          }
+        },
         { type: 'separator' },
         {
           label: t('openSource'),
@@ -831,11 +860,7 @@ function buildMenu() {
             });
           },
         },
-        { type: 'separator' },
-        {
-          label: t('aiSettings') || 'AI Settings…',
-          click: () => sendCmd('ai-settings'),
-        },
+
       ],
     },
   ];
@@ -890,6 +915,17 @@ app.whenReady().then(() => {
     }
   });
 
+  autoUpdater.on('update-not-available', () => {
+    if (_manualUpdateCheck && mainWindow) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: getLang() === 'zh' ? '检查更新' : 'Check for Updates',
+        message: getLang() === 'zh' ? '当前已是最新版本。' : 'You are using the latest version.',
+      });
+    }
+    _manualUpdateCheck = false;
+  });
+
   autoUpdater.on('update-downloaded', (info) => {
     if (mainWindow) {
       dialog.showMessageBox(mainWindow, {
@@ -905,11 +941,19 @@ app.whenReady().then(() => {
 
   autoUpdater.on('error', (err) => {
     console.error('Auto-updater error:', err);
+    if (_manualUpdateCheck && mainWindow) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'error',
+        title: getLang() === 'zh' ? '检查更新失败' : 'Update Check Failed',
+        message: getLang() === 'zh' ? `无法检查更新：${err.message}` : `Failed to check for updates: ${err.message}`,
+      });
+    }
+    _manualUpdateCheck = false;
   });
 
   // Check for updates after launch (in production only)
   if (app.isPackaged) {
-    setTimeout(() => autoUpdater.checkForUpdatesAndNotify(), 3000);
+    setTimeout(() => autoUpdater.checkForUpdates().catch(() => { }), 5000);
   }
 
   app.on('activate', () => {
