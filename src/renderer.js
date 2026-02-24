@@ -1774,8 +1774,8 @@ function showCustomPromptModal(label) {
         overlay.className = 'ai-modal-overlay';
         overlay.innerHTML = `
             <div class="ai-modal" style="max-width:400px">
-                <h3 style="margin-bottom:12px;font-size:15px;color:#e8e8e8">${label}</h3>
-                <textarea id="ai-custom-input" rows="3" style="width:100%;padding:8px 12px;background:#111;border:1px solid #333;border-radius:8px;color:#e8e8e8;font-size:13px;font-family:var(--font-sans);resize:none;outline:none"></textarea>
+                <h3 style="margin-bottom:12px;font-size:15px">${label}</h3>
+                <div class="ai-form-group"><textarea id="ai-custom-input" rows="3"></textarea></div>
                 <div class="ai-form-actions" style="margin-top:12px">
                     <button class="ai-btn ai-btn-outline" id="ai-custom-cancel">${aiT('cancel')}</button>
                     <div style="flex:1"></div>
