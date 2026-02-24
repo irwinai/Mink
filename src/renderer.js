@@ -2125,8 +2125,8 @@ document.addEventListener('keydown', (e) => {
         toggleChat();
         return;
     }
-    // Ctrl+Space — trigger autocomplete manually
-    if (e.key === ' ' && e.ctrlKey && !e.shiftKey && !e.metaKey) {
+    // Alt+/ (Option+/) — trigger autocomplete manually
+    if (e.key === '/' && e.altKey && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         triggerAutocomplete();
         return;
