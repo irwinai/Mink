@@ -2098,18 +2098,27 @@ function showGhostText(text) {
     if (!editor) return;
 
     const pos = editor.state.selection.from;
-    const coords = editor.view.coordsAtPos(pos);
-    const editorWrap = document.getElementById('editor-wrap');
-    const wrapRect = editorWrap.getBoundingClientRect();
+    const domAtPos = editor.view.domAtPos(pos);
+    if (!domAtPos) return;
 
     _ghostOverlay = document.createElement('span');
     _ghostOverlay.className = 'ai-ghost-text';
     _ghostOverlay.textContent = text;
     _ghostOverlay.dataset.suggestion = text;
-    _ghostOverlay.style.position = 'absolute';
-    _ghostOverlay.style.top = (coords.top - wrapRect.top + editorWrap.scrollTop) + 'px';
-    _ghostOverlay.style.left = (coords.left - wrapRect.left) + 'px';
-    editorWrap.appendChild(_ghostOverlay);
+    _ghostOverlay.contentEditable = 'false';
+
+    // Insert ghost span right at cursor position in the DOM
+    const node = domAtPos.node;
+    const offset = domAtPos.offset;
+    if (node.nodeType === Node.TEXT_NODE) {
+        // Split text node and insert ghost after cursor
+        const after = node.splitText(offset);
+        node.parentNode.insertBefore(_ghostOverlay, after);
+    } else if (node.childNodes[offset]) {
+        node.insertBefore(_ghostOverlay, node.childNodes[offset]);
+    } else {
+        node.appendChild(_ghostOverlay);
+    }
 }
 
 function clearGhostText() {
