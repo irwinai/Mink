@@ -2053,44 +2053,35 @@ async function sendChatMessage() {
     });
 }
 
-// ===== 4. Autocomplete =====
-let _autocompleteTimer = null;
+// ===== 4. Autocomplete (Manual: Ctrl+Space) =====
 let _ghostOverlay = null;
 
-function scheduleAutocomplete() {
-    clearAutocomplete();
+async function triggerAutocomplete() {
+    clearGhostText();
     if (isSourceMode || !editor) return;
 
-    _autocompleteTimer = setTimeout(async () => {
-        if (!editor || isSourceMode) return;
+    const config = await window.electronAPI.getAIConfig();
+    if (!config.apiKey && config.provider !== 'ollama') return;
 
-        const config = await window.electronAPI.getAIConfig();
-        if (!config.apiKey && config.provider !== 'ollama') return;
+    const { from } = editor.state.selection;
+    if (from < 10) return;
 
-        const { from } = editor.state.selection;
-        if (from < 10) return; // Don't autocomplete at very beginning
+    const textBefore = editor.state.doc.textBetween(Math.max(0, from - 500), from, '\n');
+    if (!textBefore.trim()) return;
 
-        // Get text before cursor (last 500 chars)
-        const textBefore = editor.state.doc.textBetween(Math.max(0, from - 500), from, '\n');
-        if (!textBefore.trim()) return;
-
-        try {
-            const res = await window.electronAPI.aiChat({
-                messages: [
-                    { role: 'system', content: 'You are an autocomplete engine. Given partial text, predict the next 1-2 sentences the user would write. Output ONLY the continuation, nothing else. Keep it short and natural. If you cannot predict, output nothing.' },
-                    { role: 'user', content: textBefore },
-                ],
-            });
-            if (res.error || !res.result) return;
-            const suggestion = res.result.trim();
-            if (!suggestion || suggestion.length < 3) return;
-
-            // Check cursor hasn't moved
-            if (editor.state.selection.from !== from) return;
-
-            showGhostText(suggestion);
-        } catch { }
-    }, 2000);
+    try {
+        const res = await window.electronAPI.aiChat({
+            messages: [
+                { role: 'system', content: 'You are an autocomplete engine. Given partial text, predict the next 1-2 sentences the user would write. Output ONLY the continuation, nothing else. Keep it short and natural. Match the language of the input text. If you cannot predict, output nothing.' },
+                { role: 'user', content: textBefore },
+            ],
+        });
+        if (res.error || !res.result) return;
+        const suggestion = res.result.trim();
+        if (!suggestion || suggestion.length < 3) return;
+        if (editor.state.selection.from !== from) return;
+        showGhostText(suggestion);
+    } catch { }
 }
 
 function showGhostText(text) {
@@ -2098,36 +2089,22 @@ function showGhostText(text) {
     if (!editor) return;
 
     const pos = editor.state.selection.from;
-    const domAtPos = editor.view.domAtPos(pos);
-    if (!domAtPos) return;
+    const coords = editor.view.coordsAtPos(pos);
+    const editorWrap = document.getElementById('editor-wrap');
+    const wrapRect = editorWrap.getBoundingClientRect();
 
     _ghostOverlay = document.createElement('span');
     _ghostOverlay.className = 'ai-ghost-text';
     _ghostOverlay.textContent = text;
     _ghostOverlay.dataset.suggestion = text;
-    _ghostOverlay.contentEditable = 'false';
-
-    // Insert ghost span right at cursor position in the DOM
-    const node = domAtPos.node;
-    const offset = domAtPos.offset;
-    if (node.nodeType === Node.TEXT_NODE) {
-        // Split text node and insert ghost after cursor
-        const after = node.splitText(offset);
-        node.parentNode.insertBefore(_ghostOverlay, after);
-    } else if (node.childNodes[offset]) {
-        node.insertBefore(_ghostOverlay, node.childNodes[offset]);
-    } else {
-        node.appendChild(_ghostOverlay);
-    }
+    _ghostOverlay.style.position = 'absolute';
+    _ghostOverlay.style.top = (coords.top - wrapRect.top + editorWrap.scrollTop) + 'px';
+    _ghostOverlay.style.left = (coords.left - wrapRect.left) + 'px';
+    editorWrap.appendChild(_ghostOverlay);
 }
 
 function clearGhostText() {
     if (_ghostOverlay) { _ghostOverlay.remove(); _ghostOverlay = null; }
-}
-
-function clearAutocomplete() {
-    if (_autocompleteTimer) { clearTimeout(_autocompleteTimer); _autocompleteTimer = null; }
-    clearGhostText();
 }
 
 function acceptGhostText() {
@@ -2148,6 +2125,12 @@ document.addEventListener('keydown', (e) => {
         toggleChat();
         return;
     }
+    // Ctrl+Space — trigger autocomplete manually
+    if (e.key === ' ' && e.ctrlKey && !e.shiftKey && !e.metaKey) {
+        e.preventDefault();
+        triggerAutocomplete();
+        return;
+    }
     // Tab — accept ghost text
     if (e.key === 'Tab' && _ghostOverlay) {
         e.preventDefault();
@@ -2164,22 +2147,11 @@ document.addEventListener('keydown', (e) => {
 
 // ===== Menu Command for AI Settings =====
 if (window.electronAPI?.onMenuCommand) {
-    const _origOnMenuCommand = window.electronAPI.onMenuCommand;
     window.electronAPI.onMenuCommand((data) => {
         if (data.command === 'ai-settings') {
             createAISettingsModal();
             return;
         }
-        // Let existing handler process other commands — it's already registered above
-    });
-}
-
-// ===== Trigger autocomplete on typing =====
-if (editor) {
-    const origOnUpdate = editor.options.onUpdate;
-    editor.on('update', ({ editor: ed }) => {
-        // Schedule autocomplete after each edit
-        if (!isSourceMode) scheduleAutocomplete();
     });
 }
 
@@ -2195,7 +2167,6 @@ _aiFab.title = 'AI Chat (⌘⇧L)';
 _aiFab.addEventListener('click', () => toggleChat());
 document.body.appendChild(_aiFab);
 
-// Update FAB icon when chat opens/closes
-const _origToggleChat = toggleChat;
-// Override toggleChat to also update FAB
-const _realToggle = toggleChat;
+// ===== Init =====
+applyTheme(currentTheme);
+
