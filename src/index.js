@@ -745,8 +745,8 @@ function buildMenu() {
         { type: 'separator' },
         { label: t('toggleTheme'), click: () => sendCmd('toggle-theme') },
         { type: 'separator' },
-        { role: 'togglefullscreen' },
-        { role: 'toggleDevTools' },
+        { label: t('toggleFullscreen'), accelerator: 'F', role: 'togglefullscreen' },
+        { label: t('toggleDevTools'), accelerator: 'Alt+CmdOrCtrl+I', role: 'toggleDevTools' },
       ],
     },
     {

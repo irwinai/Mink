@@ -50,6 +50,8 @@ const locales = {
         toggleOutline: '显示大纲',
         toggleSource: '源代码模式',
         toggleTheme: '切换主题',
+        toggleFullscreen: '切换全屏',
+        toggleDevTools: '开发者工具',
         // Menu - Help
         help: '帮助',
         website: '官方网站',
@@ -132,6 +134,8 @@ const locales = {
         toggleOutline: 'Show Outline',
         toggleSource: 'Source Mode',
         toggleTheme: 'Toggle Theme',
+        toggleFullscreen: 'Toggle Full Screen',
+        toggleDevTools: 'Developer Tools',
         help: 'Help',
         website: 'Official Website',
         changelog: 'Changelog',
